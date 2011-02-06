@@ -1,0 +1,143 @@
+
+use strict;
+use warnings;
+
+package Gentoo::ChangeLog::Entry::Basic;
+{
+  use Moose;
+  use MooseX::Types::Moose qw( :all );
+  use Text::Wrap ();
+  use Params::Util qw( _STRING );
+  use POSIX qw( strftime );
+
+  has 'added_files' => ( isa => ArrayRef [Str], is => 'rw', default => sub { [] } );
+
+  has 'removed_files' => ( isa => ArrayRef [Str], is => 'rw', default => sub { [] } );
+
+  has 'modified_files' => ( isa => ArrayRef [Str], is => 'rw', default => sub { [] } );
+
+  has 'date_stamp' => ( isa => Str, is => 'rw', default => sub { strftime( "%d %b %Y", gmtime ) } );
+
+  has 'author_name'  => ( isa => Str, is => 'rw', required => 1 );
+  has 'author_email' => ( isa => Str, is => 'rw', required => 1 );
+  has 'message' => ( isa => ( Str | ArrayRef [Str] ), is => 'rw', required => 1 );
+
+  with 'Gentoo::ChangeLog::Role::Entry';
+
+  sub _trace {
+      return warn shift . "\n";
+  }
+
+  sub _group_lines {
+      my @lines = @_;
+      my @out;
+      my $pos = 0;
+
+      my $last_line_finished = 1;
+      my $previous_line_indent = q{};
+
+
+      for my $inline ( 0 .. $#lines ){
+          my $line = $lines[$inline];
+
+          if( $inline == 0 ){
+              _trace('First line of message:');
+              $line =~ s/^\s*//;
+              $out[$pos] = $line;
+              if( $line !~ /[:.]\s*$/ ){
+                $last_line_finished = undef;
+              }
+              next;
+          }
+          if ( $line =~ /^(\s*)$/ ){
+              warn "Line $inline is blank\n";
+              $previous_line_indent = "$1";
+              $last_line_finished = 1;
+              $out[$pos] = q{} unless defined $out[$pos];
+              $pos++;
+              $out[$pos] = "";
+              next;
+          }
+
+          my $part_of_previous_line = undef;
+
+          my $indent = q{};
+          if( $line =~ /^(\W+)/ ){
+              warn "line $inline has preceeding space: '$1' $line\n";
+              $indent = '' . $1;
+          }
+
+          if( length $indent eq length $previous_line_indent and not $last_line_finished ){
+              warn "line $inline is part of the previous line: $line\n";
+              $part_of_previous_line = 1;
+          }
+
+          if( $part_of_previous_line ){
+
+              $line =~ s/^\s*//;
+              $out[$pos] .= ' ' . $line;
+          } else {
+              $pos++;
+              $out[$pos] = $line;
+              undef $last_line_finished
+          }
+
+          if( $line =~ /[.:]\s*$/ ){
+              $last_line_finished = 1;
+          }
+          if( $line =~ /^\W*$/ ){
+              $last_line_finished = 1;
+          }
+      }
+
+      return @out;
+  }
+
+  sub wrapped_message {
+    my $self = shift;
+    my @lines;
+    if ( _STRING( $self->message ) ) {
+      @lines = split /\n/, $self->message;
+    }
+    else {
+      @lines = @{ $self->message };
+    }
+    my @outlines =  _group_lines( @lines );
+    return map { $_ =~ s/\s*$//; $_ } @outlines;
+  }
+
+  sub wrapped_heading {
+    my $self = shift;
+
+    my $heading = sprintf "%s; %s <%s>", $self->date_stamp, $self->author_name, $self->author_email;
+    my @changedfiles;
+    if ( $self->adds_files ) {
+      push @changedfiles, map { q{+} . $_ } @{ $self->added_files };
+    }
+    if ( $self->removes_files ) {
+      push @changedfiles, map { q{-} . $_ } @{ $self->removed_files };
+    }
+    if ( $self->modifies_files ) {
+      push @changedfiles, map { q{} . $_ } @{ $self->modified_files };
+    }
+    if (@changedfiles) {
+      $heading .= ' ' . join q{, }, @changedfiles;
+    }
+    $heading .= ':';
+    my @lines = split /\n/, Text::Wrap::wrap( q{}, q{}, $heading );
+    return map { $_ =~ s/\s*$//; $_ } @lines;
+
+  }
+
+  sub lines {
+
+    my $self = shift;
+
+    return map { q{ } x 2 . $_ } $self->wrapped_heading, $self->wrapped_message;
+
+  }
+
+  __PACKAGE__->meta->make_immutable;
+}
+
+1;
