@@ -6,6 +6,7 @@ package Gentoo::ChangeLog::Object;
 # ABSTRACT: An Abstract representation of a Gentoo format ChangeLog.
 
 use Moose;
+use MooseX::StrictConstructor;
 use MooseX::Types::Moose qw( :all );
 use Gentoo::ChangeLog::Types qw( :all );
 use namespace::clean -except => 'meta';
@@ -162,7 +163,7 @@ has 'header_string'      => ( isa => Str, is => rw => default  => $EMPTY_STRING 
 =attr entries
 
 The entries attribute is the heart and soul of this Module, and it contains a list,
-timewise, of all the changelog entries.
+time-wise, of all the changelog entries.
 
 An entry can be any valid L<< C<ChangeLogEntry>|Gentoo::ChangeLog::Types/ChangeLogEntry >>;
 
@@ -256,7 +257,7 @@ sub update_copyright {
   if ( not defined $year ) {
     $year = [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET;
   }
-  return $self->changelog_ending($year);
+  return $self->copyright_ending($year);
 }
 
 =method arify

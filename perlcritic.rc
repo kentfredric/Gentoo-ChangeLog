@@ -10,7 +10,7 @@ allow_includes = 1
 [CodeLayout::ProhibitTrailingWhitespace]
 
 [Documentation::PodSpelling]
-stop_words = Gentoo ChangeLog Changelogs Changelog ChangeLogs
+stop_words = Gentoo ChangeLog Changelogs Changelog ChangeLogs changelog arify gmtime stringify ebuild Str rw Ebuilds dwim CVS ArrayRef ChangeLogEntry prepended
 
 [Subroutines::ProhibitUnusedPrivateSubroutines]
 private_name_regex = _(?!build_)\w

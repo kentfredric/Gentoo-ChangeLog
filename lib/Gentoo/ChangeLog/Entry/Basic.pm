@@ -8,8 +8,10 @@ package Gentoo::ChangeLog::Entry::Basic;
 
 {
   use Moose;
+  use MooseX::StrictConstructor;
   use MooseX::Types::Moose qw( :all );
   use Text::Wrap ();
+  use Text::Autoformat qw( autoformat break_wrap );
   use Params::Util qw( _STRING );
   use POSIX qw( strftime );
   use namespace::clean -except => 'meta';
@@ -21,6 +23,7 @@ package Gentoo::ChangeLog::Entry::Basic;
   has 'author_name'  => ( isa => Str, is => 'rw', required => 1 );
   has 'author_email' => ( isa => Str, is => 'rw', required => 1 );
   has 'message' => ( isa => ( Str | ArrayRef [Str] ), is => 'rw', required => 1 );
+  has 'message_reformat' => ( isa => Bool, is => 'rw', default => 1 );
   with 'Gentoo::ChangeLog::Role::Entry';
 
   sub _trace {
@@ -29,14 +32,15 @@ package Gentoo::ChangeLog::Entry::Basic;
 
   sub wrapped_message {
     my $self = shift;
-    my @lines;
+    my $data = q{};
     if ( _STRING( $self->message ) ) {
-      @lines = split /\n/msx, $self->message;
+      $data = $self->message;
     }
     else {
-      @lines = @{ $self->message };
+      $data = join "\n", @{ $self->message };
     }
-    my @outlines = _group_lines(@lines);
+    my $fmt = autoformat( $data, { squeeze => 1, all => 1, widow => 0, justify => 'left', tabspace => 2, break => break_wrap } );
+    my @outlines = split /\n/msx, $fmt;
     $_ =~ s{\s*$}{}gmsx for @outlines;
     return @outlines;
   }
