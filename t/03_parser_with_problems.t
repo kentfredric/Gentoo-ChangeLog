@@ -40,6 +40,33 @@ my %testmap = (
     },
     { 'problem' => "Multiple \"Changelog For\" declarations", },
   ],
+  '09_duplicate_copyright' => [
+    {
+      'problem'    => 'Copyright comment not on line 1',
+      'problem_at' => 3
+    },
+    {
+      'owner'      => 'Kent Fredric',
+      'problem'    => 'Copyright is not to Gentoo Foundation',
+      'problem_at' => 3
+    },
+    { 'problem' => 'Multiple "Copyright" declarations', }
+
+  ],
+  '10_duplicate_header' => [
+    {
+      'problem'    => 'CVS Header comment not on line 2',
+      'problem_at' => 3
+    },
+    { 'problem' => 'Multiple CVS headers declarations' }
+  ],
+  '11_wrong_license' => [
+    {
+      'license'    => 'Distributed under DICTATORIAL EDICT!',
+      'problem'    => 'License is not the standard GPL v2 License',
+      'problem_at' => 1,
+    }
+  ],
 );
 
 for my $file ( sort keys %testmap ) {
@@ -53,7 +80,11 @@ for my $file ( sort keys %testmap ) {
   is_deeply( $instance->problems, $testmap{$file}, "source file $file has expected problems" ) or do {
     note explain {
       instance => $instance,
-      problems => $instance->problems,
+      problems => [
+        map {
+          { %{$_} }
+          } @{ $instance->problems }
+      ],
       expected => $testmap{$file}
     };
   };

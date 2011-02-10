@@ -118,7 +118,7 @@ package Gentoo::ChangeLog::Parser::WithProblems;
     if ( $self->_cvs_header_lines < 1 ) {
       push @problems, { problem => 'No CVS Header' };
     }
-    if ( $self->_copyright_lines > 1 ) {
+    if ( $self->_cvs_header_lines > 1 ) {
       push @problems, { problem => 'Multiple CVS headers declarations' };
     }
 
