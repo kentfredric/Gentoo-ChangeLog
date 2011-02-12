@@ -3,103 +3,51 @@
 use strict;
 use warnings;
 
-use Gentoo::Overlay;
+use Gentoo::Overlay 0.03;
 use Gentoo::ChangeLog::Parser::WithProblems;
-
+use Moose::Autobox;
+use Data::Dump qw( dump );
 use File::Slurp qw( slurp );
 
-my $overlay = Gentoo::Overlay->new( path => '/var/paludis/repositories/perl-git' );
-#my $overlay = Gentoo::Overlay->new( path => '/usr/portage' );
+my @overlays = qw(
+  /var/paludis/repositories/perl-git
+  /usr/portage
+);
 
-my %categories = $overlay->categories();
-$|++;
+for my $overlay_path (@overlays) {
+  Gentoo::Overlay->new( path => $overlay_path )->iterate(
+    packages => sub {
+      my ( $self, $config ) = @_;
 
-my $amt = scalar keys %categories;
-my $px  = 0;
+      my $spec = $config->{category_name} . '/' . $config->{package_name};
 
-use Data::Dump qw( dump );
+      my $path = $config->{package}->path;
 
-for my $c ( sort keys %categories ) {
-  my $category = $categories{$c};
+      my $prefix = sprintf "%4s/%4s %4s/%4s", $config->{category_num} + 1,
+        $config->{num_categories}, $config->{package_num} + 1, $config->{num_packages};
 
-  my %packages = $category->packages();
+      if ( !-e "$path/ChangeLog" ) {
+        print "$prefix $spec does not have a ChangeLog!\n";
+        return;
+      }
+      my @lines = slurp("$path/ChangeLog");
+      chomp for @lines;
 
-  my $py = scalar keys %packages;
+      my $parser = Gentoo::ChangeLog::Parser::WithProblems->new( package_name => $spec, );
 
-  #    print "\n\e[33m$c ( $px / $amt : $py )\n";
-  $px++;
+      $parser->parse_lines(@lines);
+      if ( $parser->_problems_list ) {
+        dump { $spec => $parser->problems };
 
-  for my $p ( sort keys %packages ) {
+        #        dump $parser;
+      }
+      else {
 
-    my $path = $packages{$p}->path;
-    my $pre  = $packages{$p}->pretty_name;
-
-    if ( !-e "$path/ChangeLog" ) {
-      print "$pre does not have a ChangeLog!\n";
-      next;
-
-    }
-    my @lines = slurp("$path/ChangeLog");
-    chomp for @lines;
-    $pre =~ s/::.*$//;
-
-    my $parser = Gentoo::ChangeLog::Parser::WithProblems->new(
-        package_name => $pre,
-    );
-
-   $parser->parse_lines(@lines);
-   if( $parser->_problems_list ){
-        dump { $pre => $parser->problems };
-#        dump $parser;
-    } else {
         #print "[PASS] $pre\n";
-    }
-    next;
-
-=begin comment
-    my $rec = {
-      for  => $pre,
-      data => $parser,
-    };
-
-    $pre =~ s/::.*$//;
-
-    if ( $parser->_comment_lines > 0 ) {
-#      push @{$rec->{problems} } , 'has_comments';
-    }
-    if ( $parser->_copyright_lines != 1 ) {
-      push @{$rec->{problems} }, '!=1 copright';
-      print "$pre : Multiple copyrigthts
-    }
-    if ( $parser->_changelog_for_lines != 1 ) {
-
-      for ( $parser->_changelog_for_lines ){
-          next if $_->{line_no} == 0;
-          print "$pre redundant 'ChangeLog for ' at line " . $_->{line_no} . "\n";
       }
-      push @{$rec->{problems} }, '!=1 Changelog for';
+
+      #print "$prefix $spec\n";
     }
-    for my $recitem ( $parser->_changelog_for_lines ) {
-      next if $recitem->{line_no} != 0;
-      my $for = $recitem->{for};
-
-      if ( $pre !~ /^\Q$for\E/ ) {
-
-        print "$pre incorrect 'ChangeLog for ' at line 0 $for instead of $pre\n";
-        push @{$rec->{problems}},  'changelog != package',
-      }
-    }
-
-    if( exists $rec->{problems} ){
-        #  dump $rec;
-    }
-
-    next;
-
-=end
-
-=cut
-
-  }
-
+  );
 }
+

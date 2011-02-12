@@ -50,77 +50,9 @@ What this current changelog is intended to index. Usually contains the ebuild C<
 
 has 'changelog_for'      => ( isa => Str, is => rw => required => 1 );
 
-=attr copyright_starting
 
-Copyright statements in Gentoo are in 2 halves, left hand being the starting date
-of the project, and the right half being the date of the last modification.
 
-Generally, the left hand side is '1999', the date of the start of the Gentoo project,
-under which all Ebuilds and Changelog files are implementations of a concept Copyrighted
-to the Gentoo project.
 
-=head3 Specification : Int, rw, default => 1999
-
-=head3 Construction ( optional )
-
-    my $object = ...->new( copyright_starting => 2001 ... );
-
-=head3 Reading
-
-    my $copystart = $object->copyright_starting();
-    print "(C) $copystart - 2011\n";
-
-=head3 Setting
-
-    $object->copyright_starting( 1999 );
-
-=head3 See Also
-
-=over 4
-
-=item L</copyright_ending> - The corresponding other half.
-
-=back
-
-=cut
-
-has 'copyright_starting' => ( isa => Int, is => rw => default  => $DEFAULT_START_DATE );
-
-=attr copyright_ending
-
-See L</copyright_starting>.
-
-This is the right hand field of that copyright, intended to be updated every time a file bearing
-this copyright is updated.
-
-=head3 Specification : Int, rw, default => current year.
-
-=head3 Construction ( optional )
-
-    my $object = ...->new( copyright_ending => 2011 ... );
-
-=head3 Reading
-
-    my $copyend = $object->copyright_ending()
-    print "(C) 1999 - $copyend\n";
-
-=head3 Setting
-
-    $object->copyright_ending( 2011 );
-
-=head3 See Also
-
-=over 4
-
-=item L</copyright_starting> - The left hand half of this copyright.
-
-=item L</update_copyright> - A more practical dwim interface to this field.
-
-=back
-
-=cut
-
-has 'copyright_ending'   => ( isa => Int, is => rw => default  => sub { [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET } );
 
 #
 # ***** EDITOR NOTE *****
@@ -225,40 +157,6 @@ has 'entries' => (
     'insert'       => 'unshift',
   },
 );
-
-=method update_copyright
-
-This is a convenience method for updating the copyright on a changelog.
-
-=head3 Specification : $object->update_copyright()
-
-This form updates the copyright end date to reflect the current year of the local machine ( using gmtime );
-
-=head4 Example
-
-    $object->update_copyright( 1969 );
-    $object->update_copyright() # Copyright is no longer 1969, but instead something more recent like 2011
-
-=head3 Specification : $object->update_copyright( $year )
-
-This form updates the copyright end date to reflect the specified year.
-
-Note we do no checks at present to make sure the end date is after the start date.
-
-=head4 Example
-
-    $object->update_copyright()
-    $object->update_copyright(1969) # Copyright end date is now 1969.
-
-=cut
-
-sub update_copyright {
-  my ( $self, $year ) = @_;
-  if ( not defined $year ) {
-    $year = [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET;
-  }
-  return $self->copyright_ending($year);
-}
 
 =method arify
 
