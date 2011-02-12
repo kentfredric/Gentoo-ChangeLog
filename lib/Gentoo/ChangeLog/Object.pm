@@ -9,12 +9,11 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Types::Moose qw( :all );
 use Gentoo::ChangeLog::Types qw( :all );
+
+use Gentoo::ChangeLog::Header;
 use namespace::clean -except => 'meta';
 use Readonly;
 
-Readonly my $DEFAULT_START_DATE   => 1999;
-Readonly my $EPOCH_OFFSET         => 1900;
-Readonly my $LOCALTIME_YEAR_FIELD => 5;
 Readonly my $EMPTY_STRING         => q{};
 
 =head1 SYNOPSIS
@@ -28,69 +27,13 @@ This object represents an abstract structured copy of the ChangeLog.
 
 =cut
 
-=attr changelog_for
 
-What this current changelog is intended to index. Usually contains the ebuild C< cat/package > part.
+has 'header' => (
+    isa => ChangeLogHeader,
+    is => 'rw',
+    required => 1,
+);
 
-=head3 Specification : Str, rw, required
-
-=head3 Construction
-
-    my $object = ...->new( changelog_for => 'dev-lang/perl' , ... );
-
-=head3 Reading
-
-    my $for = $object->changelog_for();
-
-=head3 Setting
-
-    $object->changelog_for("sys-devel/gcc");
-
-=cut
-
-has 'changelog_for'      => ( isa => Str, is => rw => required => 1 );
-
-
-
-
-
-#
-# ***** EDITOR NOTE *****
-# The Z<> stuff in here and not using indentations is to prevent disaster should somebody
-# accidentally check this file verbatim into CVS.
-#
-=attr header_string
-
-As a legacy to the CVS system, all ChangeLog files have a CVS header line like:
-
-C<< $Z<>HeaderZ<>:Z<> /var/cvsroot/gentoo-x86/dev-lang/perl/ChangeLog,v 1.359 2011/01/22 11:19:07 armin76 Exp Z<>$Z<> >>
-
-Its quite safe to leave this value as the default ( empty ) so it emits:
-
-C<< Z<>$Z<>Header: Z<>$Z<> >>
-
-And CVS will populate it the right way.
-
-This field is mostly to preserve this field from parsed ChangeLog files so emitted files
-can retain whatever the previous value of this field was.
-
-=head3 Specification : Str, rw, default => ''
-
-=head3 Construction ( optional )
-
-    my $object = ...->new( header_string => "OHAICVS" );
-
-=head3 Reading
-
-    my $header = $object->header_string();
-
-=head3 Setting
-
-    $object->header_string("/var/cvsroot/fake/etc etc etc");
-
-=cut
-
-has 'header_string'      => ( isa => Str, is => rw => default  => $EMPTY_STRING );
 
 =attr entries
 
@@ -179,10 +122,7 @@ This method returns a list of lines representing a ChangeLog file.
 sub arify {
   my $self = shift;
   my @out;
-  push @out, sprintf q{# ChangeLog for %s}, $self->changelog_for;
-  push @out, sprintf q{# Copyright %s-%s Gentoo Foundation; Distributed under the GPL v2}, $self->copyright_starting,
-    $self->copyright_ending;
-  push @out, sprintf q{# %sHeader: %s %s}, q{$}, $self->header_string, q{$};
+  push @out, split /\n/, $self->header->to_string;
   for my $entry ( $self->entries_list ) {
     push @out, $EMPTY_STRING;
     push @out, $entry->lines();

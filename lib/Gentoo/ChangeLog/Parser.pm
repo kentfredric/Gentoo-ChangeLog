@@ -172,11 +172,13 @@ package Gentoo::ChangeLog::Parser;
   }
 
   sub extact_change_header {
-      my ( $self, $line, $lineno ) = @_ ;
-      return if ( $line !~ /^(  |\t)(.*$)/ );
-      return if not $2;
-      my $content = "$2";
-      return if not $content =~ /^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4};
+    my ( $self, $line, $lineno ) = @_;
+    return if ( $line !~ /^(  |\t)(.*$)/ );
+    return if not $2;
+    my $content = "$2";
+    return;
+
+    #      return if not $content =~ /^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}/;
 
   }
 
@@ -189,15 +191,15 @@ package Gentoo::ChangeLog::Parser;
       next if $self->extract_release( $lines[$lineno], $lineno );
       next if $self->is_location('pre-release') and $self->empty_line( $lines[$lineno], $lineno );
 
+      next;
       next
         if not $self->is_location('change-header')
           and not $self->is_location('entry')
-          and $self->extract_change_header( $line[$lineno], $lineno );
+          and $self->extract_change_header( $lines[$lineno], $lineno );
 
       next
         if $self->is_location('change-header')
-          and $self->extract_more_change_header(
-            $line[ $lineno, $lineno );
+          and $self->extract_more_change_header( $lines[$lineno], $lineno );
 
       #      $self->_append_unknown(
       #        {

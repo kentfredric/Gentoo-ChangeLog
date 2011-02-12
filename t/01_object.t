@@ -3,9 +3,12 @@ use warnings;
 
 use Test::More 0.96;
 use Gentoo::ChangeLog::Object;
+use Gentoo::ChangeLog::Header;
+
 use Gentoo::ChangeLog::Entry::Basic;
 
-my $object = Gentoo::ChangeLog::Object->new( changelog_for => 'dev-perl/Example', );
+my $object = Gentoo::ChangeLog::Object->new( header => Gentoo::ChangeLog::Header->new('dev-perl/Example') );
+
 $object->insert(
   Gentoo::ChangeLog::Entry::Basic->new(
     author_name  => 'Kent Fredric',
@@ -73,13 +76,15 @@ $object->insert(
   )
 );
 
-$object->update_copyright(1969);
+for ( @{ $object->header->copyright } ) {
+  $_->update(1969);
+}
 
 my @lines = $object->arify;
 
-is( $lines[0], '# ChangeLog for dev-perl/Example', 'Changelog header name is right' );
+is( $lines[0], '# ChangeLog for dev-perl/Example',                                      'Changelog header name is right' );
 is( $lines[1], '# Copyright 1999-1969 Gentoo Foundation; Distributed under the GPL v2', "copyright is right" );
-is( $lines[2], '# $' . 'Header' . ':'. ' ' . ' $', 'CVS header is right');
+is( $lines[2], '# $' . 'Header' . ':' . ' ' . '$',                                      'CVS header is right' );
 like( ( join "\n", @lines ), qr{http://[^\n]+3245}, "URL is unbroken" );
 done_testing;
 

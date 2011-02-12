@@ -78,7 +78,7 @@ to the Gentoo project.
   has 'start' => (
     isa     => 'Int',
     is      => 'rw',
-    default => sub { $DEFAULT_START_DATE }
+    default => sub { $DEFAULT_START_DATE },
   );
 
 =attr stop
@@ -122,7 +122,7 @@ The current Year. ( from 'localtime' )
   has 'stop' => (
     isa     => 'Int',
     is      => 'rw',
-    default => sub { [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET }
+    default => sub { [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET },
   );
 
 =attr holder
@@ -157,7 +157,7 @@ This field is for containing the Legal Copyright holder to be stored with this c
   has 'holder' => (
     isa     => 'Str',
     is      => 'rw',
-    default => sub { 'Gentoo Foundation' }
+    default => sub { 'Gentoo Foundation' },
   );
 
 =attr license
@@ -183,7 +183,7 @@ This field is a short description of the license under which the file falls.
 
     Distributed under the GPL v2
 
-head3 See Also
+=head3 See Also
 
 =over 4
 
@@ -196,7 +196,7 @@ head3 See Also
   has 'license' => (
     isa     => 'Maybe[Str]',
     is      => 'rw',
-    default => sub { 'Distributed under the GPL v2' }
+    default => sub { 'Distributed under the GPL v2' },
   );
 
 =method update
@@ -229,6 +229,7 @@ Note we do no checks at present to make sure the end date is after the start dat
     my ( $self, $year ) = @_;
     $year ||= [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET;
     $self->stop($year);
+    return $self;
   }
 
 =method to_string
@@ -251,8 +252,8 @@ will be omitted.
 
   sub to_string {
     my ($self) = @_;
-    my $license = '';
-    $license = '; ' . $self->license if $self->license;
+    my $license = q{};
+    $license = q{; } . $self->license if $self->license;
     return sprintf q{Copyright %s-%s %s%s}, $self->start, $self->stop, $self->holder, $license;
   }
   __PACKAGE__->meta->make_immutable;

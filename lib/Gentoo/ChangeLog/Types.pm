@@ -8,12 +8,13 @@ package Gentoo::ChangeLog::Types;
 
 {
 
-  use MooseX::Types -declare => [qw[ ChangeLogEntry ]];
+  use MooseX::Types -declare => [qw[ ChangeLogEntry ChangeLogHeader ]];
   use MooseX::Types::Moose qw( Object );
   use Gentoo::ChangeLog::Role::Entry;
 
-  subtype ChangeLogEntry, as Object, where { $_->DOES('Gentoo::ChangeLog::Role::Entry') };
+  role_type ChangeLogEntry,{ role => 'Gentoo::ChangeLog::Role::Entry' };
 
+  class_type ChangeLogHeader, { class => 'Gentoo::ChangeLog::Header' };
 }
 1;
 
