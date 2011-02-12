@@ -5,6 +5,7 @@ package Gentoo::ChangeLog::Header::Copyright;
 
 {
   use Moose;
+  use MooseX::StrictConstructor;
 
   use Readonly;
 
