@@ -8,6 +8,8 @@ package Gentoo::ChangeLog::Header::CVSHeader;
 
 {
   use Moose;
+  use MooseX::Types::Moose qw( :all );
+  use Gentoo::ChangeLog::Types qw( :all );
 
 =attr name
 
@@ -16,7 +18,7 @@ package Gentoo::ChangeLog::Header::CVSHeader;
 =cut
 
   has 'name' => (
-    isa     => 'Str',
+    isa     => NoPadStr,
     is      => 'rw',
     default => sub { 'Header' },
   );
@@ -59,7 +61,7 @@ can retain whatever the previous value of this field was.
 =cut
 
   has 'value' => (
-    isa     => 'Str',
+    isa     => NoPadStr,
     is      => 'rw',
     default => sub { q{} },
   );
@@ -67,9 +69,10 @@ can retain whatever the previous value of this field was.
   sub to_string {
     my ($self) = @_;
     my $dollar = q{$};
+
     # this is a bit messy to obfuscate the header string from CVS and friends.
     if ( $self->value ) {
-      return sprintf q{%s%s: %s %s}, $dollar , $self->name, $self->value, $dollar;
+      return sprintf q{%s%s: %s %s}, $dollar, $self->name, $self->value, $dollar;
     }
     else {
       return sprintf q{%s%s: %s}, $dollar, $self->name, $dollar;

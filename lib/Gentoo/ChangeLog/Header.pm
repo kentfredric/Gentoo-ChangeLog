@@ -13,15 +13,16 @@ package Gentoo::ChangeLog::Header;
 
   use Moose::Util::TypeConstraints qw( class_type );
   use MooseX::Types::Moose qw( ArrayRef Str );
+  use Gentoo::ChangeLog::Types qw( :all );
 
   has 'changelog_for' => (
-    isa      => class_type('Gentoo::ChangeLog::Header::For'),
+    isa      => ChangeLogHeaderFor,
     is       => 'rw',
     required => 1,
   );
 
   has 'copyright' => (
-    isa => ArrayRef [ class_type('Gentoo::ChangeLog::Header::Copyright') ],
+    isa => ArrayRef[ ChangeLogHeaderCopyright ],
     is => 'rw',
     default => sub {
       [ Gentoo::ChangeLog::Header::Copyright->new() ];
@@ -29,7 +30,7 @@ package Gentoo::ChangeLog::Header;
   );
 
   has 'cvs_headers' => (
-    isa => ArrayRef [ class_type('Gentoo::ChangeLog::Header::CVSHeader') ],
+    isa => ArrayRef [ ChangeLogHeaderCVSHeader ],
     is => 'rw',
     default => sub {
       [ Gentoo::ChangeLog::Header::CVSHeader->new() ];
@@ -37,7 +38,7 @@ package Gentoo::ChangeLog::Header;
   );
 
   has 'comments' => (
-    isa => ArrayRef [Str],
+    isa => ArrayRef [NoPadStr],
     is => 'rw',
     default => sub { [] }
   );
@@ -53,18 +54,25 @@ package Gentoo::ChangeLog::Header;
     }
   };
 
-  sub to_string {
+  sub to_string_list {
     my $self = shift;
     my @lines;
 
-    push @lines, split /\n/, $self->changelog_for->to_string;
-    push @lines, split /\n/, $_->to_string for @{ $self->copyright };
-    push @lines, split /\n/, $_->to_string for @{ $self->cvs_headers };
-    push @lines, split /\n/, $_ for @{ $self->comments };
-    # trim tailing whitespace
-    my $output = ( join "\n", map { '# ' . $_ }  @lines ) . "\n";
-    $output =~ s/\s*$//mg;
-    return $output;
+    push @lines, $self->changelog_for->to_string;
+    push @lines, $_->to_string for @{ $self->copyright };
+    push @lines, $_->to_string for @{ $self->cvs_headers };
+    push @lines, $_ for @{ $self->comments };
+
+    return map {
+      $_ =~ s/s\*$//;
+      $_
+    } map { "# " . $_ } @lines;
+
+  }
+
+  sub to_string {
+    my $self = shift;
+    return join qq{\n}, $self->to_string_list;
   }
 
   __PACKAGE__->meta->make_immutable;

@@ -28,6 +28,8 @@ for advanced users.
 
   use Moose;
   use MooseX::StrictConstructor;
+  use MooseX::Types::Moose qw( :all );
+  use Gentoo::ChangeLog::Types qw( :all );
 
   use Readonly;
 
@@ -76,7 +78,7 @@ to the Gentoo project.
 =cut
 
   has 'start' => (
-    isa     => 'Int',
+    isa     => Int,
     is      => 'rw',
     default => sub { $DEFAULT_START_DATE },
   );
@@ -120,7 +122,7 @@ The current Year. ( from 'localtime' )
 =cut
 
   has 'stop' => (
-    isa     => 'Int',
+    isa     => Int,
     is      => 'rw',
     default => sub { [localtime]->[$LOCALTIME_YEAR_FIELD] + $EPOCH_OFFSET },
   );
@@ -155,7 +157,7 @@ This field is for containing the Legal Copyright holder to be stored with this c
 =cut
 
   has 'holder' => (
-    isa     => 'Str',
+    isa     => NoPadStr,
     is      => 'rw',
     default => sub { 'Gentoo Foundation' },
   );
@@ -194,7 +196,7 @@ This field is a short description of the license under which the file falls.
 =cut
 
   has 'license' => (
-    isa     => 'Maybe[Str]',
+    isa     => Maybe[ NoPadStr ],
     is      => 'rw',
     default => sub { 'Distributed under the GPL v2' },
   );
@@ -256,6 +258,7 @@ will be omitted.
     $license = q{; } . $self->license if $self->license;
     return sprintf q{Copyright %s-%s %s%s}, $self->start, $self->stop, $self->holder, $license;
   }
+
   __PACKAGE__->meta->make_immutable;
 
   no Moose;

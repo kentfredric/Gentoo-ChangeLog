@@ -8,6 +8,8 @@ package Gentoo::ChangeLog::Header::For;
 
 {
   use Moose;
+  use MooseX::Types::Moose qw( :all );
+  use Gentoo::ChangeLog::Types qw( :all );
 
 =attr package
 
@@ -30,7 +32,7 @@ What this current changelog is intended to index. Usually contains the ebuild C<
 =cut
 
   has 'package' => (
-    isa      => 'Str',
+    isa      => NoPadStr,
     is       => 'rw',
     required => 1,
   );

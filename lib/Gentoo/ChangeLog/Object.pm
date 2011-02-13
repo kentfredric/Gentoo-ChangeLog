@@ -122,7 +122,8 @@ This method returns a list of lines representing a ChangeLog file.
 sub arify {
   my $self = shift;
   my @out;
-  push @out, split /\n/, $self->header->to_string;
+  push @out, $self->header->to_string_list;
+
   for my $entry ( $self->entries_list ) {
     push @out, $EMPTY_STRING;
     push @out, $entry->lines();
