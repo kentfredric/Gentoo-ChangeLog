@@ -11,7 +11,6 @@ package Gentoo::ChangeLog::Header;
   use Gentoo::ChangeLog::Header::Copyright;
   use Gentoo::ChangeLog::Header::CVSHeader;
 
-  use Moose::Util::TypeConstraints qw( class_type );
   use MooseX::Types::Moose qw( ArrayRef Str );
   use Gentoo::ChangeLog::Types qw( :all );
 
@@ -22,7 +21,7 @@ package Gentoo::ChangeLog::Header;
   );
 
   has 'copyright' => (
-    isa => ArrayRef[ ChangeLogHeaderCopyright ],
+    isa => ArrayRef [ChangeLogHeaderCopyright],
     is => 'rw',
     default => sub {
       [ Gentoo::ChangeLog::Header::Copyright->new() ];
@@ -30,7 +29,7 @@ package Gentoo::ChangeLog::Header;
   );
 
   has 'cvs_headers' => (
-    isa => ArrayRef [ ChangeLogHeaderCVSHeader ],
+    isa => ArrayRef [ChangeLogHeaderCVSHeader],
     is => 'rw',
     default => sub {
       [ Gentoo::ChangeLog::Header::CVSHeader->new() ];
@@ -40,10 +39,11 @@ package Gentoo::ChangeLog::Header;
   has 'comments' => (
     isa => ArrayRef [NoPadStr],
     is => 'rw',
-    default => sub { [] }
+    default => sub { [] },
   );
 
   around BUILDARGS => sub {
+    ## no critic ( ProhibitMagicNumbers )
     if ( @_ == 3 && !ref $_[2] ) {
       my ( $orig, $class, $value ) = @_;
       return $class->$orig( changelog_for => Gentoo::ChangeLog::Header::For->new( package => $value ) );
@@ -63,10 +63,9 @@ package Gentoo::ChangeLog::Header;
     push @lines, $_->to_string for @{ $self->cvs_headers };
     push @lines, $_ for @{ $self->comments };
 
-    return map {
-      $_ =~ s/s\*$//;
-      $_
-    } map { "# " . $_ } @lines;
+    $_ = qq{# $_} for @lines;
+    $_ =~ s/\s*$//m for @lines;
+    return @lines;
 
   }
 
@@ -78,5 +77,6 @@ package Gentoo::ChangeLog::Header;
   __PACKAGE__->meta->make_immutable;
 
   no Moose;
+
 }
 1;
